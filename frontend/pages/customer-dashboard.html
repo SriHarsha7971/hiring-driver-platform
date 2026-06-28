@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - RideHire</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <style>
+    .dashboard-page {
+      padding-bottom: var(--space-10);
+    }
+
+    .dashboard-hero {
+      padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .dashboard-hero-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+      gap: var(--space-5);
+      padding: var(--space-8);
+      background: linear-gradient(135deg, #0a1730 0%, #13305c 48%, #1749c6 100%);
+      color: var(--white);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dashboard-hero-shell::after {
+      content: '';
+      position: absolute;
+      right: -120px;
+      top: -120px;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 72%);
+    }
+
+    .hero-content,
+    .hero-side {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-greeting {
+      margin-top: var(--space-5);
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4vw, 3.3rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-subtitle {
+      max-width: 560px;
+      margin-top: var(--space-4);
+      color: rgba(255,255,255,0.82);
+      line-height: 1.8;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: var(--space-4);
+      align-content: space-between;
+    }
+
+    .hero-panel-card {
+      padding: var(--space-5);
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero-panel-card strong {
+      display: block;
+      font-size: 1.9rem;
+      margin-top: 0.35rem;
+    }
+
+    .hero-stats {
+      margin-top: var(--space-6);
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .hero-stat {
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.12);
+      text-align: left;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-stat-value {
+      font-size: var(--font-size-2xl);
+      font-weight: 800;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .hero-stat-label {
+      font-size: var(--font-size-xs);
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .active-ride-banner {
+      background: linear-gradient(135deg, #fff4d6 0%, #fff8e8 100%);
+      border: 1px solid rgba(217,148,13,0.24);
+      border-radius: var(--radius-xl);
+      padding: var(--space-4) var(--space-5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .active-ride-pulse {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #d9940d;
+      flex-shrink: 0;
+      animation: pulse-amber 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-amber {
+      0%,100% { box-shadow: 0 0 0 0 rgba(217,148,13,0.45); }
+      50% { box-shadow: 0 0 0 10px rgba(217,148,13,0); }
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+      margin: var(--space-6) 0;
+    }
+
+    .quick-action-card {
+      background: var(--surface-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      border: var(--border-soft);
+      box-shadow: var(--shadow-md);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      transition: var(--transition);
+    }
+
+    .quick-action-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .quick-action-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: var(--primary);
+      background: linear-gradient(135deg, #edf4ff 0%, #dbe9ff 100%);
+      flex-shrink: 0;
+    }
+
+    .quick-action-label {
+      font-size: var(--font-size-base);
+      font-weight: 800;
+      color: var(--gray-900);
+    }
+
+    .quick-action-text {
+      color: var(--gray-500);
+      font-size: var(--font-size-sm);
+      margin-top: 0.2rem;
+    }
+
+    .dashboard-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--space-6);
+    }
+
+    .booking-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid rgba(188, 200, 217, 0.42);
+      gap: var(--space-3);
+    }
+
+    .booking-item:last-child { border-bottom: none; }
+
+    .booking-route-line {
+      font-size: var(--font-size-sm);
+      color: var(--gray-700);
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .booking-meta-line {
+      font-size: var(--font-size-xs);
+      color: var(--gray-400);
+    }
+
+    .sidebar-card {
+      background: var(--surface-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      border: var(--border-soft);
+      box-shadow: var(--shadow-md);
+      margin-bottom: var(--space-4);
+    }
+
+    .sidebar-card-title {
+      font-size: var(--font-size-base);
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-bottom: var(--space-4);
+    }
+
+    @media (max-width: 980px) {
+      .dashboard-hero-shell,
+      .dashboard-body {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-stats,
+      .quick-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero-stats,
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .quick-action-card {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-page">
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <span class="brand-mark">RH</span>
+        <span>RideHire</span>
+      </div>
+      <nav class="navbar-nav">
+        <div id="notification-bell-mount"></div>
+        <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Logout</button>
+      </nav>
+    </nav>
+
+    <section class="dashboard-hero">
+      <div class="container">
+        <div class="dashboard-hero-shell hero-panel">
+          <div class="hero-content">
+            <span class="kicker">Customer dashboard</span>
+            <div class="hero-greeting" id="hero-greeting">Welcome back!</div>
+            <div class="hero-subtitle" id="hero-subtitle">Here is your ride summary, recent activity, and the fastest path into your next booking.</div>
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <span class="hero-stat-value" id="stat-total">-</span>
+                <span class="hero-stat-label">Total rides</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-value" id="stat-spent">-</span>
+                <span class="hero-stat-label">Total spent</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-value" id="stat-km">-</span>
+                <span class="hero-stat-label">KM travelled</span>
+              </div>
+              <div class="hero-stat">
+                <span class="hero-stat-value" id="stat-fav">-</span>
+                <span class="hero-stat-label">Preferred type</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hero-side">
+            <div class="hero-panel-card">
+              <span class="kicker" style="background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.92); border-color: rgba(255,255,255,0.08);">Trip readiness</span>
+              <strong>Book in seconds</strong>
+              <p style="color: rgba(255,255,255,0.8); margin-top: 0.55rem;">Clear booking flow, cleaner route details, and more polished ride tracking across the customer journey.</p>
+            </div>
+            <div class="hero-panel-card">
+              <div style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75;">Profile snapshot</div>
+              <div style="font-size: 1.15rem; font-weight: 800; margin-top: 0.35rem;" id="profile-name-hero">Your account</div>
+              <div style="color: rgba(255,255,255,0.78); margin-top: 0.3rem; font-size: var(--font-size-sm);" id="profile-email-hero">Signed in and ready</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="container">
+      <div id="active-ride-banner" style="display:none; margin-bottom: var(--space-5);">
+        <div class="active-ride-banner">
+          <div style="display:flex; align-items:center; gap: var(--space-3);">
+            <div class="active-ride-pulse"></div>
+            <div>
+              <div style="font-weight: 800; color: #8c5a00;" id="active-status-text">Ride in progress</div>
+              <div style="font-size: 12px; color: #9c6b0a;" id="active-route-text"></div>
+            </div>
+          </div>
+          <a id="active-track-btn" href="ride-tracking.html" class="btn btn-sm" style="background: #d9940d; color: white; flex-shrink: 0;">Track ride</a>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <a class="quick-action-card" href="book-ride.html">
+          <div class="quick-action-icon">01</div>
+          <div>
+            <span class="quick-action-label">Book a ride</span>
+            <div class="quick-action-text">Start a new booking with cleaner map and fare flow.</div>
+          </div>
+        </a>
+        <a class="quick-action-card" href="booking-history.html">
+          <div class="quick-action-icon" style="color: var(--secondary); background: linear-gradient(135deg, #e8fbf4 0%, #d8f5ea 100%);">02</div>
+          <div>
+            <span class="quick-action-label">My rides</span>
+            <div class="quick-action-text">Review trip history, live statuses, and completed rides.</div>
+          </div>
+        </a>
+        <a class="quick-action-card" href="booking-history.html?status=completed">
+          <div class="quick-action-icon" style="color: #b98000; background: linear-gradient(135deg, #fff8e1 0%, #fff0bc 100%);">03</div>
+          <div>
+            <span class="quick-action-label">Rate drivers</span>
+            <div class="quick-action-text">Share feedback and keep your preferred drivers visible.</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="dashboard-body">
+        <div>
+          <div class="card">
+            <div class="card-header flex-between">
+              <h2 class="card-title" style="font-size: var(--font-size-lg);">Recent rides</h2>
+              <a href="booking-history.html" class="btn btn-outline btn-sm">View all</a>
+            </div>
+            <div id="recent-rides-list">
+              <div class="loading-overlay" style="padding: var(--space-6) 0;">
+                <span class="spinner"></span>
+                <span class="text-muted">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Ride types</div>
+            <div id="ride-type-breakdown">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-3);">
+                <div style="display:flex; align-items:center; gap:var(--space-2); font-size:13px; color: var(--gray-700);">
+                  <span>Taxi rides</span>
+                </div>
+                <strong id="taxi-count">-</strong>
+              </div>
+              <div style="height:8px; background:var(--gray-100); border-radius:999px; margin-bottom:var(--space-4); overflow:hidden;">
+                <div id="taxi-bar" style="height:100%; background:linear-gradient(135deg, #1749c6 0%, #5a8fff 100%); border-radius:999px; width:0%; transition:width 0.8s ease;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-3);">
+                <div style="display:flex; align-items:center; gap:var(--space-2); font-size:13px; color: var(--gray-700);">
+                  <span>Personal driver</span>
+                </div>
+                <strong id="personal-count">-</strong>
+              </div>
+              <div style="height:8px; background:var(--gray-100); border-radius:999px; overflow:hidden;">
+                <div id="personal-bar" style="height:100%; background:linear-gradient(135deg, #0f9f78 0%, #43d0a8 100%); border-radius:999px; width:0%; transition:width 0.8s ease;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Spending summary</div>
+            <div style="display:flex; flex-direction:column; gap:var(--space-3);">
+              <div style="display:flex; justify-content:space-between; font-size:13px;"><span style="color:var(--gray-500);">Total spent</span><strong id="sidebar-total-spent">-</strong></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;"><span style="color:var(--gray-500);">Completed rides</span><strong id="sidebar-completed">-</strong></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;"><span style="color:var(--gray-500);">Distance covered</span><strong id="sidebar-distance">-</strong></div>
+              <div style="display:flex; justify-content:space-between; font-size:13px;"><span style="color:var(--gray-500);">Average per ride</span><strong id="sidebar-avg">-</strong></div>
+            </div>
+          </div>
+
+          <div class="sidebar-card">
+            <div class="sidebar-card-title">Your profile</div>
+            <div style="font-size:13px; color:var(--gray-600);">
+              <div style="margin-bottom:var(--space-2);"><strong id="profile-name">-</strong></div>
+              <div id="profile-email" style="color:var(--gray-400); margin-bottom:var(--space-3);"></div>
+              <a href="booking-history.html" class="btn btn-outline btn-sm btn-full">View all rides</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="../scripts/api.js"></script>
+  <script src="../scripts/socket.js"></script>
+  <script src="../scripts/notifications.js"></script>
+  <script>
+    requireAuth('customer');
+
+    const user = getUser();
+
+    function handleLogout() {
+      clearAuth();
+      window.location.href = 'login.html';
+    }
+
+    async function loadDashboard() {
+      if (user) {
+        document.getElementById('hero-greeting').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
+        document.getElementById('profile-name').textContent = user.name;
+        document.getElementById('profile-email').textContent = user.email;
+        document.getElementById('profile-name-hero').textContent = user.name;
+        document.getElementById('profile-email-hero').textContent = user.email;
+      }
+
+      const result = await api.get('/customers/stats');
+      if (!result.ok || !result.data.success) return;
+
+      const { stats, recentBookings, activeBooking } = result.data;
+
+      document.getElementById('stat-total').textContent = stats.totalRides;
+      document.getElementById('stat-spent').textContent = formatCurrency(stats.totalSpent);
+      document.getElementById('stat-km').textContent = parseFloat(stats.totalKm).toFixed(0);
+      document.getElementById('stat-fav').textContent = stats.favouriteType === 'taxi' ? 'Taxi' : 'Driver';
+
+      document.getElementById('sidebar-total-spent').textContent = formatCurrency(stats.totalSpent);
+      document.getElementById('sidebar-completed').textContent = stats.completedRides;
+      document.getElementById('sidebar-distance').textContent = `${parseFloat(stats.totalKm).toFixed(1)} km`;
+      document.getElementById('sidebar-avg').textContent = stats.completedRides > 0 ? formatCurrency(stats.totalSpent / stats.completedRides) : '-';
+
+      const total = stats.taxiRides + stats.personalRides || 1;
+      document.getElementById('taxi-count').textContent = stats.taxiRides;
+      document.getElementById('personal-count').textContent = stats.personalRides;
+      setTimeout(() => {
+        document.getElementById('taxi-bar').style.width = `${(stats.taxiRides / total) * 100}%`;
+        document.getElementById('personal-bar').style.width = `${(stats.personalRides / total) * 100}%`;
+      }, 100);
+
+      if (activeBooking) {
+        document.getElementById('active-ride-banner').style.display = 'block';
+        const STATUS_TEXT = {
+          pending: 'Searching for a driver...',
+          accepted: 'Driver confirmed',
+          driver_arriving: 'Driver is on the way',
+          ride_started: 'Ride in progress',
+        };
+        document.getElementById('active-status-text').textContent = STATUS_TEXT[activeBooking.status] || activeBooking.status;
+        document.getElementById('active-route-text').textContent = `${activeBooking.pickupAddress.slice(0,30)}... -> ${activeBooking.destinationAddress.slice(0,25)}...`;
+        document.getElementById('active-track-btn').href = `ride-tracking.html?id=${activeBooking.id}`;
+      }
+
+      renderRecentRides(recentBookings);
+    }
+
+    function renderRecentRides(bookings) {
+      const el = document.getElementById('recent-rides-list');
+      if (!bookings || bookings.length === 0) {
+        el.innerHTML = `
+          <div style="text-align:center; padding:var(--space-8) 0; color:var(--gray-400);">
+            <div style="font-size:40px; margin-bottom:var(--space-3);">-</div>
+            <p style="font-weight:700; margin-bottom:var(--space-2); color: var(--gray-700);">No rides yet</p>
+            <a href="book-ride.html" class="btn btn-primary btn-sm">Book your first ride</a>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = bookings.map(b => `
+        <div class="booking-item">
+          <div style="flex:1; min-width:0;">
+            <div class="booking-route-line">${b.pickupAddress.slice(0,28)}... -> ${b.destinationAddress.slice(0,22)}...</div>
+            <div class="booking-meta-line">${formatDateTime(b.createdAt)}${b.driverName ? ' | ' + b.driverName : ''}</div>
+          </div>
+          <div style="text-align:right; flex-shrink:0;">
+            ${getStatusBadge(b.status)}
+            <div style="font-size:13px; font-weight:700; color:var(--primary); margin-top:3px;">${formatCurrency(b.fareAmount)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    connectSocket();
+    fetch('../components/notification-bell.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('notification-bell-mount').innerHTML = html;
+        setTimeout(initNotificationBell, 600);
+      })
+      .catch(() => {});
+
+    if (typeof socket !== 'undefined') {
+      setTimeout(() => {
+        if (socket) {
+          socket.on('booking_status_updated', () => loadDashboard());
+          socket.on('no_drivers_found', () => loadDashboard());
+        }
+      }, 800);
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
+
+
+

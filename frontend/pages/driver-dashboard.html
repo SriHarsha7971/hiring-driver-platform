@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Driver Dashboard - RideHire</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <style>
+    .driver-page {
+      padding-bottom: var(--space-10);
+    }
+
+    .driver-hero {
+      padding: var(--space-8) 0 var(--space-6);
+    }
+
+    .driver-hero-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      gap: var(--space-5);
+      padding: var(--space-8);
+      background: linear-gradient(135deg, #071d1a 0%, #0e3f37 48%, #0f9f78 100%);
+      color: var(--white);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-xl);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .driver-hero-shell::after {
+      content: '';
+      position: absolute;
+      right: -110px;
+      top: -120px;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.14), transparent 70%);
+    }
+
+    .driver-hero-shell > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-name {
+      margin-top: var(--space-5);
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 4vw, 3.3rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-sub {
+      margin-top: var(--space-4);
+      color: rgba(255,255,255,0.8);
+      line-height: 1.7;
+      max-width: 520px;
+    }
+
+    .online-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      font-weight: 800;
+      margin-top: var(--space-4);
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.18);
+      transition: var(--transition);
+      backdrop-filter: blur(12px);
+    }
+
+    .online-pill.offline { background: rgba(255,255,255,0.12); color: white; }
+    .online-pill.online { background: rgba(255,255,255,0.96); color: #0f9f78; }
+
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .online-dot.offline { background: rgba(255,255,255,0.5); }
+    .online-dot.online { background: #0f9f78; animation: blink 1.5s infinite; }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .gps-pill {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.12);
+      border-radius: var(--radius-full);
+      padding: 0.7rem 0.95rem;
+      font-size: 12px;
+      color: white;
+      margin-top: var(--space-3);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .gps-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #86efac;
+      animation: blink 1.5s infinite;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: var(--space-4);
+      align-content: start;
+    }
+
+    .hero-side-card {
+      padding: var(--space-5);
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-side-card strong {
+      display: block;
+      font-size: 1.8rem;
+      margin-top: 0.4rem;
+    }
+
+    .stats-float {
+      margin-top: calc(-1 * var(--space-3));
+      margin-bottom: var(--space-6);
+    }
+
+    .earnings-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .earning-card {
+      background: var(--surface-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-md);
+      border: var(--border-soft);
+      text-align: left;
+    }
+
+    .earning-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-3);
+      background: linear-gradient(135deg, #edf4ff 0%, #dbe8ff 100%);
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .earning-value {
+      font-size: var(--font-size-2xl);
+      font-weight: 800;
+      color: var(--gray-900);
+      margin-bottom: 2px;
+    }
+
+    .earning-label {
+      font-size: 11px;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .driver-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: var(--space-6);
+    }
+
+    .request-area {
+      background: var(--surface-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      border: var(--border-soft);
+      box-shadow: var(--shadow-md);
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      margin-bottom: var(--space-5);
+    }
+
+    .rating-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rating-bar-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: 12px;
+      color: var(--gray-600);
+    }
+
+    .rating-bar-label { width: 28px; text-align: right; flex-shrink: 0; }
+    .rating-bar-track { flex: 1; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
+    .rating-bar-fill { height: 100%; background: linear-gradient(135deg, #d9940d 0%, #f4b740 100%); border-radius: 4px; transition: width .8s ease; }
+    .rating-bar-count { width: 24px; color: var(--gray-400); flex-shrink: 0; }
+
+    .mini-chart { display:flex; align-items:flex-end; gap:6px; height:60px; padding:0 4px; }
+    .chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+    .chart-bar { width:100%; background:linear-gradient(180deg, #1749c6 0%, #5a8fff 100%); border-radius:3px 3px 0 0; min-height:4px; transition:height .6s ease; }
+    .chart-label { font-size:10px; color:var(--gray-400); }
+
+    .modal-overlay {
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(4,12,24,.45);
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      z-index:200;
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-box {
+      background: var(--surface-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      width: 100%;
+      max-width: 460px;
+      box-shadow: var(--shadow-xl);
+      border: var(--border-soft);
+    }
+
+    .form-row-2 { display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); }
+
+    @media (max-width: 980px) {
+      .driver-hero-shell,
+      .driver-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .earnings-grid,
+      .form-row-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .earnings-grid,
+      .form-row-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="driver-page">
+  <div id="edit-profile-modal" class="modal-overlay" onclick="if(event.target===this)hideEditProfileForm()">
+    <div class="modal-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-5);">
+        <h2 style="font-size:var(--font-size-xl);font-weight:800;">Edit profile</h2>
+        <button onclick="hideEditProfileForm()" style="background:none;border:none;font-size:20px;color:var(--gray-400);cursor:pointer;">X</button>
+      </div>
+      <form onsubmit="submitProfileEdit(event)">
+        <div class="form-group"><label class="form-label">Full name</label><input type="text" id="edit-name" class="form-input"/></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="tel" id="edit-phone" class="form-input"/></div>
+        <div class="form-group"><label class="form-label">Vehicle type</label>
+          <select id="edit-vehicle-type" class="form-select">
+            <option value="sedan">Sedan</option><option value="suv">SUV</option>
+            <option value="hatchback">Hatchback</option><option value="auto">Auto Rickshaw</option>
+            <option value="bike">Bike</option>
+          </select>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group"><label class="form-label">Vehicle number</label><input type="text" id="edit-vehicle-number" class="form-input"/></div>
+          <div class="form-group"><label class="form-label">Vehicle model</label><input type="text" id="edit-vehicle-model" class="form-input"/></div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);margin-top:var(--space-2);flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary" style="flex:1" onclick="hideEditProfileForm()">Cancel</button>
+          <button type="submit" id="save-profile-btn" class="btn btn-primary" style="flex:2">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="brand-mark">RH</span>
+      <span>RideHire</span>
+    </div>
+    <nav class="navbar-nav">
+      <span id="status-badge" class="badge badge-offline">Offline</span>
+      <a href="booking-history.html" class="nav-link">History</a>
+      <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Logout</button>
+    </nav>
+  </nav>
+
+  <section class="driver-hero">
+    <div class="container">
+      <div class="driver-hero-shell hero-panel">
+        <div>
+          <span class="kicker">Driver operations</span>
+          <div class="hero-name" id="driver-hero-name">Loading...</div>
+          <div class="hero-sub" id="driver-hero-vehicle">Vehicle info</div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;margin-top:var(--space-2);">
+            <button id="toggle-status-btn" class="online-pill offline" onclick="toggleOnlineStatus()">
+              <span class="online-dot offline" id="online-dot"></span>
+              <span id="online-pill-text">Go online</span>
+            </button>
+            <div class="gps-pill" id="gps-indicator">
+              <div class="gps-dot"></div>
+              <span>GPS: <span id="gps-coords">acquiring...</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-side">
+          <div class="hero-side-card">
+            <div style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.74;">Shift status</div>
+            <strong>Accept with confidence</strong>
+            <p style="margin-top: 0.45rem; color: rgba(255,255,255,0.8);">Your requests, profile, and ride performance are grouped into one clearer workspace.</p>
+          </div>
+          <div class="hero-side-card">
+            <div style="font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.74;">Focus view</div>
+            <div style="margin-top: 0.45rem; color: rgba(255,255,255,0.84);">Manage active rides, ratings, and weekly activity without visual clutter.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="container">
+    <div class="stats-float">
+      <div class="earnings-grid">
+        <div class="earning-card"><div class="earning-icon">TD</div><div class="earning-value" id="earn-today">-</div><div class="earning-label">Today</div></div>
+        <div class="earning-card"><div class="earning-icon">WK</div><div class="earning-value" id="earn-week">-</div><div class="earning-label">This week</div></div>
+        <div class="earning-card"><div class="earning-icon">MO</div><div class="earning-value" id="earn-month">-</div><div class="earning-label">This month</div></div>
+        <div class="earning-card" style="background:linear-gradient(135deg,#fff7df,#fffdf4);border-color:rgba(217,148,13,0.18);">
+          <div class="earning-icon" style="background:linear-gradient(135deg,#fff1c4,#ffe39b);color:#a56d00;">RT</div><div class="earning-value" id="earn-rating" style="color:#a56d00;">-</div><div class="earning-label">Avg rating</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="driver-grid">
+      <div>
+        <div id="driver-action-panel" style="margin-bottom:var(--space-5);"></div>
+        <div class="request-area" id="ride-request-area">
+          <div class="request-placeholder">
+            <div style="font-size:40px;margin-bottom:var(--space-3); color: var(--primary);">--</div>
+            <p style="font-weight:700;color:var(--gray-700);margin-bottom:var(--space-2);">Waiting for ride requests</p>
+            <p style="font-size:13px;color:var(--gray-400);">Go online to start receiving requests</p>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:var(--space-5);">
+          <h2 style="font-size:var(--font-size-base);font-weight:800;margin-bottom:var(--space-4);">Rides this week</h2>
+          <div id="weekly-chart" class="mini-chart"><div class="loading-overlay"><span class="spinner"></span></div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:var(--space-4);border-bottom:1px solid rgba(188,200,217,0.55);margin-bottom:var(--space-4);flex-wrap:wrap;gap:var(--space-3);">
+            <h2 style="font-size:var(--font-size-base);font-weight:800;">Recent rides</h2>
+            <a href="booking-history.html" class="btn btn-outline btn-sm">View all</a>
+          </div>
+          <div id="recent-rides-list"><div class="loading-overlay"><span class="spinner"></span></div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:var(--space-5);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-4);gap:var(--space-3);flex-wrap:wrap;">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:var(--gray-900);" id="profile-name">-</div>
+              <div style="font-size:12px;color:var(--gray-400);margin-top:2px;" id="profile-email">-</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="showEditProfileForm()">Edit</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Vehicle</span><span style="font-weight:600;" id="profile-vehicle">-</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Number</span><span style="font-weight:600;" id="profile-number">-</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Total rides</span><span style="font-weight:600;" id="profile-rides">-</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--gray-500);">Distance driven</span><span style="font-weight:600;" id="profile-distance">-</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="font-size:var(--font-size-base);font-weight:800;margin-bottom:4px;">Rating breakdown</h2>
+          <div style="text-align:center;margin-bottom:var(--space-4);">
+            <div id="rating-big" style="font-size:40px;font-weight:800;color:#a56d00;">-</div>
+            <div id="rating-count" style="font-size:12px;color:var(--gray-400);">No ratings yet</div>
+          </div>
+          <div class="rating-bars" id="rating-bars"><div class="loading-overlay"><span class="spinner"></span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:var(--space-8);"></div>
+  </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="../scripts/socket.js"></script>
+<script src="../scripts/api.js"></script>
+<script src="../scripts/driver.js"></script>
+<script src="../scripts/rideStatus.js"></script>
+<script>
+  requireAuth('driver');
+
+  function handleLogout(){ stopLocationSharing(); clearAuth(); window.location.href='login.html'; }
+
+  async function loadDriverStats(){
+    const result = await api.get('/stats/driver');
+    if(!result.ok||!result.data.success) return;
+    const {stats,dailyStats,driverProfile} = result.data;
+
+    document.getElementById('driver-hero-name').textContent = driverProfile.name;
+    document.getElementById('driver-hero-vehicle').textContent = (driverProfile.vehicleType||'') + ' | ' + (driverProfile.vehicleNumber||'No plate');
+
+    document.getElementById('earn-today').textContent  = formatCurrency(stats.earningsToday);
+    document.getElementById('earn-week').textContent   = formatCurrency(stats.earningsThisWeek);
+    document.getElementById('earn-month').textContent  = formatCurrency(stats.earningsThisMonth);
+    document.getElementById('earn-rating').textContent = stats.avgRating ? parseFloat(stats.avgRating).toFixed(1)+'*' : '-';
+
+    document.getElementById('profile-name').textContent     = driverProfile.name;
+    document.getElementById('profile-vehicle').textContent  = driverProfile.vehicleModel||driverProfile.vehicleType||'-';
+    document.getElementById('profile-number').textContent   = driverProfile.vehicleNumber||'-';
+    document.getElementById('profile-rides').textContent    = stats.totalCompleted;
+    document.getElementById('profile-distance').textContent = stats.totalDistanceKm+' km';
+
+    document.getElementById('rating-big').textContent   = stats.avgRating ? parseFloat(stats.avgRating).toFixed(1)+'*' : '-';
+    document.getElementById('rating-count').textContent = stats.totalRatings ? stats.totalRatings+' rating'+(stats.totalRatings!==1?'s':'') : 'No ratings yet';
+
+    renderRatingBars(stats.ratingBreakdown, stats.totalRatings);
+    renderWeeklyChart(dailyStats);
+    isOnline = driverProfile.isOnline;
+    syncStatusUI(isOnline);
+    renderStats({avgRating:stats.avgRating, totalRides:stats.totalCompleted, totalEarnings:stats.earningsAllTime});
+  }
+
+  function syncStatusUI(online){
+    const pill=document.getElementById('toggle-status-btn');
+    const dot=document.getElementById('online-dot');
+    const txt=document.getElementById('online-pill-text');
+    const badge=document.getElementById('status-badge');
+    if(pill){ pill.className='online-pill '+(online?'online':'offline'); }
+    if(dot){  dot.className ='online-dot '+(online?'online':'offline'); }
+    if(txt){  txt.textContent = online ? 'Online - tap to go offline' : 'Go online'; }
+    if(badge){ badge.textContent=online?'Online':'Offline'; badge.className='badge '+(online?'badge-online':'badge-offline'); }
+    const gps=document.getElementById('gps-indicator');
+    if(gps) gps.style.display=online?'flex':'none';
+  }
+
+  function renderRatingBars(breakdown, total){
+    const el=document.getElementById('rating-bars');
+    if(!el) return;
+    const max=Math.max(...Object.values(breakdown),1);
+    el.innerHTML=[5,4,3,2,1].map(star=>{
+      const count=breakdown[star]||0;
+      const pct=Math.round((count/max)*100);
+      return `<div class="rating-bar-row">
+        <div class="rating-bar-label">${star}*</div>
+        <div class="rating-bar-track"><div class="rating-bar-fill" style="width:${pct}%"></div></div>
+        <div class="rating-bar-count">${count}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderWeeklyChart(dailyStats){
+    const el=document.getElementById('weekly-chart');
+    if(!el) return;
+    const days=[];
+    for(let i=6;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      const key=d.toISOString().slice(0,10);
+      const found=dailyStats.find(s=>new Date(s.date).toISOString().slice(0,10)===key);
+      days.push({label:d.toLocaleDateString('en-IN',{weekday:'short'}), rides:found?found.rides:0});
+    }
+    const maxR=Math.max(...days.map(d=>d.rides),1);
+    el.innerHTML=days.map(day=>{
+      const pct=Math.round((day.rides/maxR)*100);
+      return `<div class="chart-bar-wrap">
+        <div class="chart-bar" style="height:${Math.max(pct*0.6,4)}px;opacity:${day.rides?1:.3};" title="${day.rides} rides"></div>
+        <div class="chart-label">${day.label}</div>
+      </div>`;
+    }).join('');
+  }
+
+  async function loadActiveBooking(){
+    const result=await api.get('/bookings/my');
+    if(!result.ok||!result.data.success) return;
+    const bookings=result.data.bookings;
+    const active=bookings.find(b=>['accepted','driver_arriving','ride_started'].includes(b.status));
+    if(active){ renderDriverActionPanel(active); }
+    else{ document.getElementById('driver-action-panel').innerHTML=''; }
+    renderRecentRides(bookings);
+  }
+
+  function renderRecentRides(bookings){
+    const el=document.getElementById('recent-rides-list');
+    if(!el) return;
+    if(!bookings||bookings.length===0){
+      el.innerHTML='<p class="text-muted text-center" style="padding:var(--space-6);font-size:13px;">No rides yet. Go online to start.</p>';
+      return;
+    }
+    el.innerHTML=bookings.slice(0,5).map(b=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) 0;border-bottom:1px solid rgba(188,200,217,0.42);gap:var(--space-3);">
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:13px;font-weight:700;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${b.pickupAddress.slice(0,28)}...
+          </div>
+          <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">${formatDateTime(b.createdAt)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${getStatusBadge(b.status)}
+          <div style="font-size:13px;font-weight:700;color:var(--primary);margin-top:3px;">${formatCurrency(b.fareAmount)}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  loadDriverProfile().then(driver=>{
+    if(driver){
+      connectSocket(driver.id);
+      if(driver.isOnline) startLocationSharing();
+      document.getElementById('profile-email').textContent=driver.email;
+    }
+  });
+
+  loadDriverStats();
+  loadActiveBooking();
+  setInterval(()=>{ loadDriverStats(); loadActiveBooking(); }, 20000);
+</script>
+</body>
+</html>
+
+
+

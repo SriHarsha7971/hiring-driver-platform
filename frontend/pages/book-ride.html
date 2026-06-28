@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a Ride — RideHire</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Our styles -->
+  <link rel="stylesheet" href="../styles/global.css" />
+  <link rel="stylesheet" href="../styles/map.css" />
+</head>
+<body style="overflow: hidden; margin: 0; padding: 0;">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">🚗 RideHire</div>
+    <nav class="navbar-nav">
+      <a href="customer-dashboard.html" class="nav-link">← Dashboard</a>
+      <span id="nav-user" class="text-muted" style="font-size: var(--font-size-sm)"></span>
+    </nav>
+  </nav>
+
+  <!-- Main Layout: Booking Panel | Map -->
+  <div class="booking-layout" style="display:grid; grid-template-columns:380px 1fr; height:calc(100vh - 64px); overflow:hidden;">
+
+    <!-- ── LEFT: Booking Panel ── -->
+    <div class="booking-panel">
+      <div>
+        <h1 class="booking-panel-title">Book a ride</h1>
+        <p class="text-muted" style="font-size: var(--font-size-sm)">
+          Choose your ride type, then click the map to set your locations.
+        </p>
+      </div>
+
+      <!-- Step 1: Ride Type Selection -->
+      <div>
+        <p class="form-label" style="margin-bottom: var(--space-3)">Step 1 — Choose ride type</p>
+        <div class="ride-type-grid">
+          <div class="ride-type-card selected" id="type-taxi" onclick="selectRideType('taxi')">
+            <div class="ride-type-icon">🛺</div>
+            <div class="ride-type-name">Taxi / Cab</div>
+            <div class="ride-type-desc">Ride in our cab</div>
+          </div>
+          <div class="ride-type-card" id="type-personal_driver" onclick="selectRideType('personal_driver')">
+            <div class="ride-type-icon">🚗</div>
+            <div class="ride-type-name">Personal driver</div>
+            <div class="ride-type-desc">Driver for your car</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Driver Extra Details (shown only for personal_driver) -->
+      <div id="personal-driver-panel" style="display:none; background:var(--gray-50);
+           border:1.5px solid #93c5fd; border-radius:var(--radius-lg); padding:var(--space-4);">
+
+        <p class="form-label" style="margin-bottom:var(--space-3); color:#1e40af;">
+          🚗 Step 2 — Your car details
+        </p>
+
+        <!-- Trip type selector -->
+        <div class="form-group">
+          <label class="form-label">Trip type</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--space-2);">
+            <label style="cursor:pointer;">
+              <input type="radio" name="trip-type" value="one_way" checked
+                     onchange="onTripTypeChange(this.value)"
+                     style="margin-right:4px;" />
+              <span style="font-size:13px;">One-way</span>
+            </label>
+            <label style="cursor:pointer;">
+              <input type="radio" name="trip-type" value="hourly"
+                     onchange="onTripTypeChange(this.value)"
+                     style="margin-right:4px;" />
+              <span style="font-size:13px;">Hourly</span>
+            </label>
+            <label style="cursor:pointer;">
+              <input type="radio" name="trip-type" value="daily"
+                     onchange="onTripTypeChange(this.value)"
+                     style="margin-right:4px;" />
+              <span style="font-size:13px;">Daily</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Duration (shown for hourly/daily) -->
+        <div id="duration-group" class="form-group" style="display:none;">
+          <label class="form-label" id="duration-label">Number of hours</label>
+          <input type="number" id="trip-duration" class="form-input"
+                 min="1" value="2" placeholder="e.g. 4"
+                 oninput="onDurationChange()" />
+          <div style="font-size:11px; color:var(--gray-400); margin-top:3px;" id="duration-hint">
+            Minimum 2 hours · ₹250/hr
+          </div>
+        </div>
+
+        <!-- Car model and number on one row -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3);">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">
+              Car model <span style="color:var(--danger);">*</span>
+            </label>
+            <input type="text" id="car-model" class="form-input"
+                   placeholder="e.g. Honda City" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">
+              Car number <span style="color:var(--danger);">*</span>
+            </label>
+            <input type="text" id="car-number" class="form-input"
+                   placeholder="e.g. TS 09 AB 1234" />
+          </div>
+        </div>
+
+        <!-- Car colour -->
+        <div class="form-group" style="margin-top:var(--space-3);">
+          <label class="form-label">Car colour (optional)</label>
+          <input type="text" id="car-color" class="form-input"
+                 placeholder="e.g. White" />
+        </div>
+
+        <!-- Special instructions -->
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Special instructions (optional)</label>
+          <textarea id="special-instructions" class="form-input"
+                    rows="2" style="resize:none;"
+                    placeholder="e.g. Please arrive 10 minutes early. Luggage in boot."></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2 / 3: Locations -->
+      <div style="position: relative;">
+        <p class="form-label" style="margin-bottom: var(--space-3)" id="location-step-label">
+          Step 2 — Set locations
+        </p>
+
+        <!-- Pickup -->
+        <div class="location-input-group">
+          <div class="location-label">
+            <span class="location-dot pickup"></span>
+            Pickup location
+          </div>
+          <!-- Search input -->
+          <input
+            type="text"
+            id="pickup-search"
+            class="form-input"
+            placeholder="Search or click the map..."
+            oninput="onSearchInput(this.value, 'pickup')"
+            onkeydown="if(event.key==='Enter') searchAddress(this.value, 'pickup')"
+            autocomplete="off"
+          />
+          <!-- Dropdown suggestions -->
+          <div id="pickup-suggestions" class="suggestions-dropdown"></div>
+          <!-- Selected address display -->
+          <div
+            id="pickup-address-display"
+            class="address-display empty"
+            style="margin-top: var(--space-2)"
+          >
+            Click map or search above
+          </div>
+        </div>
+
+        <!-- Swap button -->
+        <div style="position:relative; height:0; display:flex; justify-content:flex-end; margin-right:8px">
+          <button class="swap-btn" onclick="swapLocations()" title="Swap pickup and destination">
+            ⇅
+          </button>
+        </div>
+
+        <!-- Destination -->
+        <div class="location-input-group" style="margin-top: var(--space-2)">
+          <div class="location-label">
+            <span class="location-dot dest"></span>
+            Destination
+          </div>
+          <input
+            type="text"
+            id="dest-search"
+            class="form-input"
+            placeholder="Search or click the map..."
+            oninput="onSearchInput(this.value, 'destination')"
+            onkeydown="if(event.key==='Enter') searchAddress(this.value, 'destination')"
+            autocomplete="off"
+          />
+          <div id="dest-suggestions" class="suggestions-dropdown"></div>
+          <div
+            id="destination-address-display"
+            class="address-display empty"
+            style="margin-top: var(--space-2)"
+          >
+            Click map or search above
+          </div>
+        </div>
+      </div>
+      <!-- end locations section -->
+
+      <!-- Route info bar -->
+      <div class="route-info-bar" id="route-info">
+        <span class="text-muted" style="font-size: var(--font-size-sm)">
+          Set both locations to see distance &amp; time
+        </span>
+      </div>
+
+      <!-- Step 3: Fare Estimate -->
+      <div class="fare-box" id="fare-box">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <div class="fare-label">Estimated fare</div>
+            <div class="fare-amount" id="fare-amount">₹—</div>
+          </div>
+          <div style="text-align:right; font-size: var(--font-size-xs); color: var(--gray-500);">
+            <div id="fare-distance-badge"></div>
+            <div id="fare-duration-badge"></div>
+          </div>
+        </div>
+        <!-- Surcharge notice -->
+        <div id="surcharge-notice" style="display:none; margin-top: var(--space-2); padding: var(--space-2) var(--space-3); background:#fef3c7; border-radius: var(--radius-md); font-size: var(--font-size-xs); color:#92400e;"></div>
+        <!-- Line-item breakdown -->
+        <div id="fare-breakdown-lines" style="margin-top: var(--space-3); display:flex; flex-direction:column; gap: 4px;"></div>
+      </div>
+
+      <!-- Confirm Booking Button -->
+      <button
+        id="confirm-btn"
+        class="btn btn-primary btn-lg btn-full"
+        onclick="submitRideBooking()"
+        disabled
+        style="margin-top: auto;"
+      >
+        Confirm booking
+      </button>
+
+      <p class="text-muted text-center" style="font-size: var(--font-size-xs)">
+        You can cancel before the driver arrives
+      </p>
+    </div>
+
+    <!-- ── RIGHT: Map ── -->
+    <div style="position:relative; width:100%; height:calc(100vh - 64px); overflow:hidden;">
+      <!-- Floating instruction label -->
+      <div class="map-instruction" id="map-instruction" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:500;background:white;padding:6px 16px;border-radius:999px;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:13px;font-weight:500;white-space:nowrap;pointer-events:none;">
+        📍 Click the map to set PICKUP location (A)
+      </div>
+
+      <!-- The Leaflet map renders here -->
+      <div id="map" style="width:100%;height:100%;"></div>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Our scripts -->
+  <script src="../scripts/api.js"></script>
+  <script src="../scripts/map.js"></script>
+  <script src="../scripts/booking.js"></script>
+
+  <script>
+    requireAuth('customer');
+
+    const user = getUser();
+    if (user) document.getElementById('nav-user').textContent = user.name;
+
+    let selectedRideType = 'taxi';
+    let selectedTripType = 'one_way';
+    let currentFareResult = null;
+
+    initMap('map');
+
+    function selectRideType(type) {
+      selectedRideType = type;
+      document.getElementById('type-taxi').classList.toggle('selected', type === 'taxi');
+      document.getElementById('type-personal_driver').classList.toggle('selected', type === 'personal_driver');
+      const panel     = document.getElementById('personal-driver-panel');
+      const stepLabel = document.getElementById('location-step-label');
+      if (type === 'personal_driver') {
+        panel.style.display = 'block';
+        stepLabel.textContent = 'Step 3 — Set locations';
+      } else {
+        panel.style.display = 'none';
+        stepLabel.textContent = 'Step 2 — Set locations';
+        selectedTripType = 'one_way';
+      }
+      fetchFareEstimate(window.mapState.distanceKm || 0, window.mapState.durationMin);
+    }
+
+    function onTripTypeChange(value) {
+      selectedTripType = value;
+      const dg = document.getElementById('duration-group');
+      const dl = document.getElementById('duration-label');
+      const dh = document.getElementById('duration-hint');
+      const di = document.getElementById('trip-duration');
+      if (value === 'hourly') {
+        dg.style.display = 'block';
+        dl.textContent = 'Number of hours';
+        di.min = 2; di.value = 2;
+        dh.textContent = 'Minimum 2 hours · ₹250/hr';
+      } else if (value === 'daily') {
+        dg.style.display = 'block';
+        dl.textContent = 'Number of days';
+        di.min = 1; di.value = 1;
+        dh.textContent = '₹1800/day (8 hrs) · Extra hours ₹200/hr';
+      } else {
+        dg.style.display = 'none';
+      }
+      fetchFareEstimate(window.mapState.distanceKm || 0, window.mapState.durationMin);
+    }
+
+    function onDurationChange() {
+      fetchFareEstimate(window.mapState.distanceKm || 0, window.mapState.durationMin);
+    }
+
+    function onRouteReady(distanceKm, durationMin) {
+      fetchFareEstimate(distanceKm, durationMin);
+    }
+
+    async function fetchFareEstimate(distanceKm, durationMin) {
+      document.getElementById('fare-box').classList.add('visible');
+      document.getElementById('fare-amount').textContent = '...';
+      document.getElementById('fare-breakdown-lines').innerHTML =
+        '<span class="text-muted" style="font-size:12px">Calculating...</span>';
+
+      const tripDuration = ['hourly','daily'].includes(selectedTripType)
+        ? parseFloat(document.getElementById('trip-duration')?.value) || null : null;
+
+      try {
+        const result = await api.post('/fare/estimate', {
+          distanceKm: distanceKm || 0,
+          rideType: selectedRideType,
+          tripType: selectedTripType,
+          tripDuration: tripDuration,
+        });
+        if (result && result.ok && result.data && result.data.success) {
+          currentFareResult = result.data.fare;
+          renderFareCard(currentFareResult, durationMin);
+          document.getElementById('confirm-btn').disabled = false;
+          return;
+        }
+      } catch(e) { console.warn('Fare API fallback'); }
+
+      // Local fallback
+      const RATES = {
+        taxi: { base:50, min:80, tiers:[[5,14],[15,12],[Infinity,10]] },
+        personal_driver: { base:100, min:150, tiers:[[5,18],[15,16],[Infinity,14]],
+                           hourlyRate:250, dailyRate:1800 },
+      };
+      const r = RATES[selectedRideType];
+      let total = 0, breakdown = [];
+      if (selectedRideType === 'personal_driver' && selectedTripType === 'hourly') {
+        const hrs = Math.max(tripDuration||2, 2);
+        total = Math.ceil(hrs * r.hourlyRate);
+        breakdown = [{label:`Hourly hire (${hrs} hrs)`, amount:total, note:`₹${r.hourlyRate}/hr`}];
+      } else if (selectedRideType === 'personal_driver' && selectedTripType === 'daily') {
+        const days = Math.max(tripDuration||1, 1);
+        total = Math.ceil(days * r.dailyRate);
+        breakdown = [{label:`Daily hire (${days} day${days!==1?'s':''})`, amount:total, note:`₹${r.dailyRate}/day`}];
+      } else {
+        let rem = distanceKm||0, df=0, prev=0;
+        breakdown = [{label:'Base fare', amount:r.base, note:'Flat pickup charge'}];
+        for (const [upTo, rate] of r.tiers) {
+          if (rem<=0) break;
+          const km = upTo===Infinity ? rem : Math.min(rem, upTo-prev);
+          const sub = parseFloat((km*rate).toFixed(2));
+          if (km>0) { df+=sub; breakdown.push({label:'Distance', amount:sub, note:`${km.toFixed(2)} km × ₹${rate}`}); }
+          rem-=km; prev=upTo;
+        }
+        total = Math.max(Math.ceil(r.base+df), r.min);
+      }
+      currentFareResult = {totalFare:total, distanceKm, breakdown, surcharge:null};
+      renderFareCard(currentFareResult, durationMin);
+      document.getElementById('confirm-btn').disabled = false;
+    }
+
+    function renderFareCard(fare, durationMin) {
+      document.getElementById('fare-amount').textContent = formatCurrency(fare.totalFare);
+      document.getElementById('fare-distance-badge').textContent = fare.distanceKm > 0 ? `📏 ${fare.distanceKm} km` : '';
+      document.getElementById('fare-duration-badge').textContent = durationMin ? `⏱ ~${durationMin} min` : '';
+      const se = document.getElementById('surcharge-notice');
+      if (fare.surcharge) { se.style.display='block'; se.textContent=`⚡ ${fare.surcharge.name} (+${fare.surcharge.percentage}%)`; }
+      else se.style.display='none';
+      document.getElementById('fare-breakdown-lines').innerHTML =
+        fare.breakdown.map(l=>`<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gray-600);padding:2px 0;border-bottom:1px solid rgba(0,0,0,0.05);"><span>${l.label} <span style="color:var(--gray-400);font-size:11px">${l.note||''}</span></span><span style="font-weight:500;color:var(--gray-800);">${formatCurrency(l.amount)}</span></div>`).join('') +
+        `<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--primary);padding-top:4px;"><span>Total</span><span>${formatCurrency(fare.totalFare)}</span></div>`;
+    }
+
+    async function swapLocations() {
+      const p = window.mapState.pickup, d = window.mapState.destination;
+      if (!p || !d) return;
+      window.mapState.pickup = d; window.mapState.destination = p;
+      document.getElementById('pickup-search').value = d.address;
+      document.getElementById('dest-search').value   = p.address;
+      updateAddressField('pickup', d.address);
+      updateAddressField('destination', p.address);
+      if (pickupMarker) pickupMarker.setLatLng([d.lat, d.lng]);
+      if (destMarker)   destMarker.setLatLng([p.lat, p.lng]);
+      await drawRoute();
+    }
+
+    function validatePersonalDriverFields() {
+      if (selectedRideType !== 'personal_driver') return {valid:true};
+      const carModel  = document.getElementById('car-model')?.value.trim();
+      const carNumber = document.getElementById('car-number')?.value.trim();
+      if (!carModel)  return {valid:false, message:'Please enter your car model (e.g. Honda City).'};
+      if (!carNumber) return {valid:false, message:'Please enter your car registration number.'};
+      return {valid:true};
+    }
+
+    async function submitRideBooking() {
+      const pickup = window.mapState.pickup;
+      const dest   = window.mapState.destination;
+
+      if (!pickup) { showToast('Please set your pickup location on the map.', 'warning'); return; }
+      if (selectedRideType === 'taxi' && !dest) { showToast('Please set your destination on the map.', 'warning'); return; }
+      if (selectedRideType === 'personal_driver' && selectedTripType === 'one_way' && !dest) {
+        showToast('Please set your destination for a one-way trip.', 'warning'); return;
+      }
+
+      const validation = validatePersonalDriverFields();
+      if (!validation.valid) { showToast(validation.message, 'warning'); return; }
+      if (!currentFareResult) { showToast('Please wait for the fare estimate.', 'warning'); return; }
+
+      const tripDuration = ['hourly','daily'].includes(selectedTripType)
+        ? parseFloat(document.getElementById('trip-duration')?.value) || null : null;
+
+      const bookingData = {
+        rideType: selectedRideType,
+        tripType: selectedTripType,
+        tripDuration: tripDuration,
+        carModel:    selectedRideType==='personal_driver' ? document.getElementById('car-model')?.value.trim() : null,
+        carNumber:   selectedRideType==='personal_driver' ? document.getElementById('car-number')?.value.trim() : null,
+        carColor:    selectedRideType==='personal_driver' ? document.getElementById('car-color')?.value.trim() : null,
+        specialInstructions: selectedRideType==='personal_driver' ? document.getElementById('special-instructions')?.value.trim() : null,
+        pickupAddress:      pickup.address,
+        destinationAddress: dest ? dest.address : null,
+        pickupLat:  pickup.lat, pickupLng:  pickup.lng,
+        destinationLat: dest ? dest.lat : null,
+        destinationLng: dest ? dest.lng : null,
+        distanceKm: window.mapState.distanceKm || 0,
+        fareAmount: currentFareResult.totalFare,
+      };
+
+      await confirmBooking(bookingData);
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.location-input-group')) {
+        hideSearchDropdown('pickup');
+        hideSearchDropdown('destination');
+      }
+    });
+  </script>
+
+</body>
+</html>

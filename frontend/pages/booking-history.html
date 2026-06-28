@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Booking History - RideHire</title>
+  <link rel="stylesheet" href="../styles/global.css" />
+  <style>
+    .history-page {
+      padding: var(--space-6) 0 var(--space-10);
+    }
+
+    .history-shell {
+      max-width: 920px;
+    }
+
+    .history-hero {
+      padding: var(--space-7);
+      margin-bottom: var(--space-6);
+      background: linear-gradient(135deg, #0a1730 0%, #13305c 48%, #1749c6 100%);
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .history-hero::after {
+      content: '';
+      position: absolute;
+      right: -120px;
+      top: -90px;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.16), transparent 70%);
+    }
+
+    .history-hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .history-title {
+      margin-top: var(--space-4);
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .history-copy {
+      margin-top: var(--space-3);
+      color: rgba(255,255,255,0.8);
+      max-width: 620px;
+      line-height: 1.8;
+    }
+
+    .history-head-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-4);
+      margin-top: var(--space-6);
+      flex-wrap: wrap;
+    }
+
+    .history-filters {
+      display: flex;
+      gap: var(--space-2);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(188, 200, 217, 0.42);
+      background: rgba(255,255,255,0.85);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--primary) 0%, #4f86ff 100%);
+      border-color: transparent;
+      color: var(--white);
+      box-shadow: 0 18px 34px rgba(23, 73, 198, 0.24);
+    }
+
+    .filter-btn:hover:not(.active) {
+      border-color: rgba(23, 73, 198, 0.28);
+      color: var(--primary);
+    }
+
+    .booking-card {
+      background: var(--surface-strong);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      border: var(--border-soft);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+    }
+
+    .booking-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .booking-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-3);
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .booking-route {
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+      margin-bottom: var(--space-3);
+    }
+
+    .route-point {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+      line-height: 1.5;
+    }
+
+    .route-icon { flex-shrink: 0; font-size: 13px; margin-top: 3px; color: var(--primary); }
+
+    .booking-person-info {
+      background: linear-gradient(135deg, #f8fbff 0%, #eff5ff 100%);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--font-size-sm);
+      color: var(--gray-600);
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      border: 1px solid rgba(23, 73, 198, 0.1);
+    }
+
+    .booking-meta {
+      display: flex;
+      gap: var(--space-4);
+      font-size: var(--font-size-xs);
+      color: var(--gray-400);
+      flex-wrap: wrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-12) var(--space-4);
+      color: var(--gray-400);
+    }
+
+    .empty-state-icon { font-size: 52px; margin-bottom: var(--space-4); }
+
+    .booking-card.active-ride {
+      border-color: rgba(23, 73, 198, 0.22);
+      background: linear-gradient(135deg, #eff4ff, #ffffff);
+    }
+
+    .active-booking-banner {
+      background: linear-gradient(135deg, #1749c6 0%, #4f86ff 100%);
+      color: white;
+      text-align: center;
+      padding: var(--space-3);
+      font-size: var(--font-size-sm);
+      font-weight: 700;
+      margin-bottom: var(--space-4);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 18px 36px rgba(23, 73, 198, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="brand-mark">RH</span>
+      <span>RideHire</span>
+    </div>
+    <nav class="navbar-nav">
+      <a id="dashboard-link" href="customer-dashboard.html" class="nav-link">Dashboard</a>
+      <div id="notification-bell-mount"></div>
+      <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Logout</button>
+    </nav>
+  </nav>
+
+  <div class="history-page">
+    <div class="container history-shell">
+      <section class="section-shell history-hero">
+        <span class="kicker">Ride records</span>
+        <h1 class="history-title">Booking history</h1>
+        <p class="history-copy" id="booking-subtitle">All your rides, recent activity, and status updates in one refined timeline.</p>
+        <div class="history-head-row">
+          <div style="color: rgba(255,255,255,0.76); font-size: var(--font-size-sm);"></div>
+          <div id="customer-book-btn"></div>
+        </div>
+      </section>
+
+      <div id="active-banner" class="active-booking-banner" style="display:none;">You have an active ride in progress</div>
+
+      <div class="history-filters">
+        <button class="filter-btn active" onclick="filterBookings(null, this)">All</button>
+        <button class="filter-btn" onclick="filterBookings('pending', this)">Pending</button>
+        <button class="filter-btn" onclick="filterBookings('accepted', this)">Accepted</button>
+        <button class="filter-btn" onclick="filterBookings('driver_arriving', this)">Arriving</button>
+        <button class="filter-btn" onclick="filterBookings('ride_started', this)">In ride</button>
+        <button class="filter-btn" onclick="filterBookings('completed', this)">Completed</button>
+        <button class="filter-btn" onclick="filterBookings('cancelled', this)">Cancelled</button>
+      </div>
+
+      <div id="bookings-list">
+        <div class="loading-overlay">
+          <span class="spinner"></span>
+          <span class="text-muted">Loading rides...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="../scripts/api.js"></script>
+  <script src="../scripts/booking.js"></script>
+  <script src="../scripts/socket.js"></script>
+  <script src="../scripts/notifications.js"></script>
+  <script>
+    requireAuth();
+
+    const user = getUser();
+
+    if (user) {
+      if (user.role === 'driver') {
+        document.getElementById('dashboard-link').href = 'driver-dashboard.html';
+        document.getElementById('booking-subtitle').textContent = 'Rides you have driven, organized into a cleaner operational history.';
+      } else {
+        document.getElementById('customer-book-btn').innerHTML = '<a href="book-ride.html" class="btn btn-primary btn-sm">New ride</a>';
+      }
+    }
+
+    function handleLogout() {
+      clearAuth();
+      window.location.href = 'login.html';
+    }
+
+    function filterBookings(status, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      loadBookingHistory(status);
+    }
+
+    function startAutoRefresh() {
+      setInterval(() => {
+        const activeBtn = document.querySelector('.filter-btn.active');
+        const currentFilter = activeBtn && activeBtn.textContent !== 'All' ? activeBtn.textContent.toLowerCase().replace(' ', '_') : null;
+        loadBookingHistory(currentFilter);
+      }, 15000);
+    }
+
+    loadBookingHistory(null);
+    startAutoRefresh();
+
+    connectSocket();
+
+    fetch('../components/notification-bell.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('notification-bell-mount').innerHTML = html;
+        setTimeout(initNotificationBell, 600);
+      })
+      .catch(() => {});
+
+    function promptRating(bookingId) {
+      const doRate = confirm('Your ride is complete. Rate your driver now?');
+      if (doRate) {
+        window.location.href = `rate-driver.html?bookingId=${bookingId}`;
+      }
+    }
+  </script>
+</body>
+</html>
